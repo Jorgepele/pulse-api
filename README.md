@@ -1,88 +1,77 @@
-# Pulse API — Feedback & Roadmap SaaS
+# Pulse API — a Django learning project
 
-> A multi-tenant SaaS backend where teams collect feature requests, let users upvote them, and publish a public roadmap. Built with Django REST Framework.
->
-> Backend SaaS multi-tenant donde los equipos recogen peticiones de funcionalidades, permiten votarlas y publican una hoja de ruta pública. Hecho con Django REST Framework.
+> A small feedback & roadmap web API (teams post feature requests, users upvote them),
+> built to practise Django, REST APIs and the MVC pattern beyond university coursework.
+> Work in progress — I'm learning in the open.
 
-<p align="left">
-  <img alt="Python" src="https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white">
-  <img alt="Django" src="https://img.shields.io/badge/Django-6.0-092E20?logo=django&logoColor=white">
-  <img alt="DRF" src="https://img.shields.io/badge/DRF-3.17-A30000">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-passing-brightgreen">
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-blue">
-</p>
+> API web de feedback y hoja de ruta (los equipos publican peticiones y los usuarios votan),
+> hecha para practicar Django, APIs REST y el patrón MVC más allá de las prácticas de clase.
+> En desarrollo — aprendiendo sobre la marcha.
+
+**Stack:** Python 3.14 · Django 6 · Django REST Framework · SQLite
 
 ---
 
-## 🇬🇧 English
+## Why this project · Por qué este proyecto
 
-### What it demonstrates
-- **Multi-tenant architecture** — every board and post belongs to an `Organization`, users join via `Membership` roles.
-- **Clean MVC/MVT layering** — models (domain) → serializers (boundary) → views (controllers) → URLs (routing).
-- **Custom user model** authenticated by email.
-- **REST API** with a stateful vote-toggle action, filtering and pagination.
-- **Subscription plans** (Free/Pro) modeled for Stripe test-mode integration.
-- **Tested** — domain + API tests run in CI.
+I wanted a project bigger than a class exercise to actually understand how a web backend
+fits together: designing the data model, separating concerns (models → serializers →
+views), exposing a REST API, and covering it with tests. It's not a real product — it's a
+place to learn.
 
-### Domain model
-```
-User ──owns──> Organization <──Membership──> User
-                    │
-                    ├── Board ──> Post ──> Vote (1 per user)
-                    │                └──> Comment
-                    └── Subscription ──> Plan
-```
+Quería un proyecto más grande que un ejercicio de clase para entender de verdad cómo
+encaja un backend web: diseñar el modelo de datos, separar responsabilidades
+(modelos → serializers → vistas), exponer una API REST y cubrirla con tests. No es un
+producto real, es un sitio para aprender.
 
-### Quick start
+## What it does so far · Qué hace por ahora
+
+- Data model with users, organizations, boards, posts, votes and comments.
+- REST API to list/create posts and toggle an upvote (one vote per user per post).
+- Django admin to browse the data.
+- A handful of tests for the domain rules and the API.
+
+## What I learned / practised · Qué he aprendido
+
+- Structuring a Django project into apps and following the MVC/MVT separation.
+- Building a REST API with Django REST Framework (serializers, viewsets, routers).
+- Modelling relationships (foreign keys, many-to-many through a join model).
+- Writing tests with Django's test client.
+
+## Run it locally · Cómo ejecutarlo
+
 ```bash
 python -m venv .venv
-source .venv/Scripts/activate      # Windows Git Bash;  use .venv/bin/activate on Unix
+source .venv/Scripts/activate      # Windows Git Bash;  .venv/bin/activate on Linux/macOS
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py createsuperuser
 python manage.py runserver
 ```
-- API root: `http://127.0.0.1:8000/api/`
-- Admin: `http://127.0.0.1:8000/admin/`
-- Health: `http://127.0.0.1:8000/`
 
-### Key endpoints
+- API: `http://127.0.0.1:8000/api/`
+- Admin: `http://127.0.0.1:8000/admin/` (run `python manage.py createsuperuser` first)
+
+## Main endpoints
+
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET`  | `/api/boards/` | List boards |
 | `GET`  | `/api/posts/?board=<id>` | List posts on a board |
-| `POST` | `/api/posts/` | Create a feature request (auth) |
-| `POST` | `/api/posts/<id>/vote/` | Toggle your upvote (auth) |
-| `GET`  | `/api/comments/?post=<id>` | List comments |
+| `POST` | `/api/posts/` | Create a feature request (login required) |
+| `POST` | `/api/posts/<id>/vote/` | Toggle your upvote (login required) |
+| `GET`  | `/api/comments/?post=<id>` | List comments on a post |
 
-### Tests
+## Tests
+
 ```bash
 python manage.py test
 ```
 
----
+## Ideas for next steps · Siguientes pasos
 
-## 🇪🇸 Español
-
-### Qué demuestra
-- **Arquitectura multi-tenant** — cada tablero y post pertenece a una `Organization`; los usuarios se unen con roles vía `Membership`.
-- **Capas MVC/MVT limpias** — modelos (dominio) → serializers (frontera) → vistas (controladores) → URLs (enrutado).
-- **Modelo de usuario propio** autenticado por email.
-- **API REST** con acción de voto con estado (toggle), filtrado y paginación.
-- **Planes de suscripción** (Free/Pro) modelados para integración con Stripe en modo test.
-- **Con tests** — dominio + API ejecutados en CI.
-
-### Arranque rápido
-```bash
-python -m venv .venv
-source .venv/Scripts/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
-
-Consulta la tabla de endpoints en la sección en inglés.
+Things I'd like to add as I learn more: authentication endpoints, filtering the roadmap by
+status, and a simple frontend to consume the API.
 
 ---
 
-Part of the [Pulse portfolio](../PORTFOLIO.md): `pulse-api` (Django) · `pulse-web` (React) · `pulse-rails` · `pulse-laravel` · `fp-kit`.
+MIT licensed. Built by [Jorge](https://github.com/Jorgepele) while learning Django.
