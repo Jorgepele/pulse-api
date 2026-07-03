@@ -11,6 +11,7 @@ def health(_request):
 urlpatterns = [
     path("", health, name="health"),
     path("admin/", admin.site.urls),
+    path("api/auth/", include("accounts.urls")),
     path("api/", include("feedback.urls")),
     path("api-auth/", include("rest_framework.urls")),  # browsable-API login
 ]

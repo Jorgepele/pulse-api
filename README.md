@@ -27,9 +27,10 @@ producto real, es un sitio para aprender.
 ## What it does so far · Qué hace por ahora
 
 - Data model with users, organizations, boards, posts, votes and comments.
+- Token-based authentication: register, login and a "current user" endpoint.
 - REST API to list/create posts and toggle an upvote (one vote per user per post).
 - Django admin to browse the data.
-- A handful of tests for the domain rules and the API.
+- A handful of tests for the domain rules, the API and the auth flow.
 
 ## What I learned / practised · Qué he aprendido
 
@@ -53,8 +54,14 @@ python manage.py runserver
 
 ## Main endpoints
 
+Authentication uses DRF tokens: register or log in, then send the token on later
+requests as `Authorization: Token <key>`.
+
 | Method | Path | Description |
 |--------|------|-------------|
+| `POST` | `/api/auth/register/` | Create an account, returns a token |
+| `POST` | `/api/auth/login/` | Exchange email + password for a token |
+| `GET`  | `/api/auth/me/` | Current user (token required) |
 | `GET`  | `/api/boards/` | List boards |
 | `GET`  | `/api/posts/?board=<id>` | List posts on a board |
 | `POST` | `/api/posts/` | Create a feature request (login required) |
@@ -69,8 +76,8 @@ python manage.py test
 
 ## Ideas for next steps · Siguientes pasos
 
-Things I'd like to add as I learn more: authentication endpoints, filtering the roadmap by
-status, and a simple frontend to consume the API.
+Things I'd like to add as I learn more: filtering the roadmap by status, subscription
+plans (Stripe test mode), and a simple React frontend to consume the API.
 
 ---
 
