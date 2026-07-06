@@ -64,6 +64,12 @@ class PostAPITests(TestCase):
         self.assertEqual(response.data["author_email"], "b@example.com")
 
 
+class SchemaTests(TestCase):
+    def test_openapi_schema_is_served(self):
+        response = self.client.get("/api/schema/")
+        self.assertEqual(response.status_code, 200)
+
+
 class CommentAPITests(TestCase):
     def setUp(self):
         self.client = APIClient()
