@@ -10,12 +10,19 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from accounts.models import Membership, Organization
+from billing.models import Plan
 from feedback.models import Board, Post
 
 User = get_user_model()
 
 DEMO_EMAIL = "demo@pulse.dev"
 DEMO_PASSWORD = "demo12345"
+
+# The pricing tiers shown on the landing page. (name, slug, price_cents, max_boards)
+PLANS = [
+    ("Free", "free", 0, 1),
+    ("Pro", "pro", 1900, 10),
+]
 
 # Example feature requests, as a real feedback board might collect them.
 POSTS = [
@@ -50,6 +57,12 @@ class Command(BaseCommand):
             organization=org, slug="feature-requests",
             defaults={"name": "Feature requests", "is_public": True},
         )
+
+        for name, slug, price_cents, max_boards in PLANS:
+            Plan.objects.get_or_create(
+                slug=slug,
+                defaults={"name": name, "price_cents": price_cents, "max_boards": max_boards},
+            )
 
         for title, body in POSTS:
             Post.objects.get_or_create(
