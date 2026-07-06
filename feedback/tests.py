@@ -62,3 +62,33 @@ class PostAPITests(TestCase):
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["author_email"], "b@example.com")
+
+
+class CommentAPITests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(email="c@example.com", password="pw12345!")
+        self.org = Organization.objects.create(name="Acme", owner=self.user)
+        self.board = Board.objects.create(organization=self.org, name="Features")
+        self.post = Post.objects.create(board=self.board, author=self.user, title="Dark mode")
+
+    def test_create_comment_sets_author(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(
+            "/api/comments/", {"post": self.post.id, "body": "Yes please!"}
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["author_email"], "c@example.com")
+
+    def test_list_comments_filtered_by_post(self):
+        other = Post.objects.create(board=self.board, author=self.user, title="Other")
+        self.post.comments.create(author=self.user, body="On this post")
+        other.comments.create(author=self.user, body="On the other post")
+        response = self.client.get(f"/api/comments/?post={self.post.id}")
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["body"], "On this post")
+
+    def test_post_exposes_comment_count(self):
+        self.post.comments.create(author=self.user, body="A comment")
+        response = self.client.get("/api/posts/")
+        self.assertEqual(response.data["results"][0]["comment_count"], 1)

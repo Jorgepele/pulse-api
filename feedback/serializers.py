@@ -15,6 +15,7 @@ class BoardSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     vote_count = serializers.IntegerField(read_only=True)
+    comment_count = serializers.IntegerField(source="comments.count", read_only=True)
     author_email = serializers.EmailField(source="author.email", read_only=True)
     has_voted = serializers.SerializerMethodField()
 
@@ -22,7 +23,7 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = [
             "id", "board", "title", "body", "status",
-            "vote_count", "has_voted", "author_email", "created_at",
+            "vote_count", "comment_count", "has_voted", "author_email", "created_at",
         ]
         read_only_fields = ["status", "created_at"]
 
