@@ -10,22 +10,26 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+# Settings read from the environment in production, with dev-friendly defaults so
+# `python manage.py runserver` works locally without any configuration.
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@yd^%^v)tq1x)_dkr%_79*__29)ku4sbd7_&^=%^5&e-j1igg#'
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-@yd^%^v)tq1x)_dkr%_79*__29)ku4sbd7_&^=%^5&e-j1igg#",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
@@ -50,6 +54,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise serves static files (admin, browsable API) in production.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -124,6 +130,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # where collectstatic gathers files for WhiteNoise
+
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -146,8 +160,26 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
-# During development allow the React dev server (Vite) to call the API.
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
+# Which frontend origins may call the API. Defaults to the local Vite dev server;
+# in production set CORS_ALLOWED_ORIGINS to the deployed frontend URL.
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173",
+).split(",")
+
+# Trust the deployed domain for CSRF (needed for the browsable API over HTTPS).
+CSRF_TRUSTED_ORIGINS = [
+    o for o in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if o
 ]
+
+# Production hardening — only when DEBUG is off, so local dev over HTTP is
+# unaffected. Render terminates TLS at its proxy, so we trust the forwarded
+# header to detect HTTPS.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
