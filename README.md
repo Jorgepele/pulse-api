@@ -14,6 +14,23 @@
 
 ---
 
+## Live demo · Demo en vivo
+
+Deployed on Render (free tier — the first request may take ~30 s while the
+service wakes up):
+
+- API root: **https://pulse-api-wmuq.onrender.com/**
+- Interactive API docs (Swagger): **https://pulse-api-wmuq.onrender.com/api/docs/**
+
+The React frontend that consumes it lives at
+**https://pulse-web-lvhx.onrender.com** — log in with `demo@pulse.dev` / `demo12345`.
+
+Desplegado en Render (plan gratis — la primera petición puede tardar ~30 s
+mientras el servicio arranca). Frontend que la consume:
+https://pulse-web-lvhx.onrender.com (`demo@pulse.dev` / `demo12345`).
+
+---
+
 ## Why this project · Por qué este proyecto
 
 I wanted a project bigger than a class exercise to actually understand how a web backend
