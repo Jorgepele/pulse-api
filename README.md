@@ -116,9 +116,13 @@ settings, WhiteNoise, gunicorn). Step-by-step guide in [DEPLOY.md](DEPLOY.md).
 ## Ideas for next steps · Siguientes pasos
 
 Things I'd like to add as I learn more: replacing the simulated billing with a real
-Stripe test-mode integration, filtering the roadmap by status, and porting the core
-to Rails and Laravel to compare how MVC maps across frameworks. The React frontend
+Stripe test-mode integration and filtering the roadmap by status. The React frontend
 lives in [pulse-web](https://github.com/Jorgepele/pulse-web).
+
+To compare how the MVC pattern maps across frameworks, I ported this API's core
+(organizations, boards, posts, votes, comments, token auth) to two others:
+[pulse-rails](https://github.com/Jorgepele/pulse-rails) (Ruby on Rails) and
+[pulse-laravel](https://github.com/Jorgepele/pulse-laravel) (Laravel).
 
 ---
 
