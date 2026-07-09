@@ -63,6 +63,15 @@ class PostAPITests(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["author_email"], "b@example.com")
 
+    def test_list_posts_filtered_by_status(self):
+        # setUp already created one "open" post; add a "planned" one.
+        Post.objects.create(
+            board=self.board, author=self.user, title="Planned one", status="planned"
+        )
+        response = self.client.get("/api/posts/?status=planned")
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["title"], "Planned one")
+
 
 class SchemaTests(TestCase):
     def test_openapi_schema_is_served(self):

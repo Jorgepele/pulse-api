@@ -21,6 +21,9 @@ class PostViewSet(viewsets.ModelViewSet):
         board = self.request.query_params.get("board")
         if board:
             qs = qs.filter(board_id=board)
+        status = self.request.query_params.get("status")
+        if status:
+            qs = qs.filter(status=status)
         return qs
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])

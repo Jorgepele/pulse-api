@@ -139,7 +139,7 @@ requests as `Authorization: Token <key>`.
 | `POST` | `/api/auth/login/` | Exchange email + password for a token |
 | `GET`  | `/api/auth/me/` | Current user (token required) |
 | `GET`  | `/api/boards/` | List boards |
-| `GET`  | `/api/posts/?board=<id>` | List posts on a board |
+| `GET`  | `/api/posts/?board=<id>&status=<status>` | List posts, filtered by board and/or status |
 | `POST` | `/api/posts/` | Create a feature request (login required) |
 | `POST` | `/api/posts/<id>/vote/` | Toggle your upvote (login required) |
 | `GET`  | `/api/comments/?post=<id>` | List comments on a post |
