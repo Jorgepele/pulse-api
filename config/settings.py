@@ -193,3 +193,13 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+# --- Stripe (optional real billing) ------------------------------------------
+# The demo runs with simulated billing (billing.SubscriptionView). Set
+# STRIPE_SECRET_KEY to switch the checkout endpoint to real Stripe Checkout in
+# test mode; see billing/BILLING.md. Left unset, the demo keeps working.
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_SUCCESS_URL = os.environ.get("STRIPE_SUCCESS_URL", "http://localhost:5173/?checkout=success")
+STRIPE_CANCEL_URL = os.environ.get("STRIPE_CANCEL_URL", "http://localhost:5173/?checkout=cancel")
+STRIPE_ENABLED = bool(STRIPE_SECRET_KEY)

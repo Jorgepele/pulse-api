@@ -49,12 +49,13 @@ producto real, es un sitio para aprender.
 - Token-based authentication: register, login and a "current user" endpoint.
 - REST API to list/create posts, toggle an upvote (one vote per user per post),
   and read/write comments.
-- Subscription plans and a (simulated) subscribe endpoint — the SaaS-shaped
-  pieces, without taking real payments.
+- Subscription plans with a simulated subscribe endpoint for the demo, plus an
+  optional real **Stripe Checkout** flow (test mode) behind an env flag — see
+  [billing/BILLING.md](billing/BILLING.md).
 - A `seed_demo` command that fills the database with a demo account, board,
   posts and plans so the API has something to show.
 - Django admin to browse the data.
-- 23 tests covering the domain rules, the API, auth and billing.
+- 28 tests covering the domain rules, the API, auth and billing.
 
 ## Data model · Modelo de datos
 
@@ -146,6 +147,8 @@ requests as `Authorization: Token <key>`.
 | `POST` | `/api/comments/` | Add a comment (login required) |
 | `GET`  | `/api/plans/` | List subscription plans (public) |
 | `GET`/`POST` | `/api/billing/subscription/` | Read or set the org's plan (demo, no payment) |
+| `POST` | `/api/billing/checkout/` | Start a Stripe Checkout session (when Stripe is configured) |
+| `POST` | `/api/billing/webhook/` | Stripe webhook — activates the subscription on payment |
 
 ## Tests
 
@@ -162,9 +165,9 @@ settings, WhiteNoise, gunicorn). Step-by-step guide in [DEPLOY.md](DEPLOY.md).
 
 ## Ideas for next steps · Siguientes pasos
 
-Things I'd like to add as I learn more: replacing the simulated billing with a real
-Stripe test-mode integration and filtering the roadmap by status. The React frontend
-lives in [pulse-web](https://github.com/Jorgepele/pulse-web).
+Things I'd like to add as I learn more: handling the full subscription lifecycle
+from Stripe webhooks (renewals, cancellations) and enforcing per-plan limits in
+the API. The React frontend lives in [pulse-web](https://github.com/Jorgepele/pulse-web).
 
 To compare how the MVC pattern maps across frameworks, I ported this API's core
 (organizations, boards, posts, votes, comments, token auth) to two others:

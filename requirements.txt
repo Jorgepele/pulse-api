@@ -5,5 +5,6 @@ djangorestframework==3.17.1
 drf-spectacular==0.30.0
 gunicorn==26.0.0
 sqlparse==0.5.5
+stripe==15.3.0
 tzdata==2026.2
 whitenoise==6.12.0
