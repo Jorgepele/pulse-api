@@ -56,6 +56,53 @@ producto real, es un sitio para aprender.
 - Django admin to browse the data.
 - 23 tests covering the domain rules, the API, auth and billing.
 
+## Data model · Modelo de datos
+
+The domain is multi-tenant: every board, post and subscription belongs to an
+**organization**, and users join organizations through **memberships**.
+
+```mermaid
+erDiagram
+    User ||--o{ Organization : owns
+    User ||--o{ Membership : "joins via"
+    Organization ||--o{ Membership : has
+    Organization ||--o{ Board : owns
+    Board ||--o{ Post : contains
+    User ||--o{ Post : authors
+    Post ||--o{ Vote : receives
+    User ||--o{ Vote : casts
+    Post ||--o{ Comment : has
+    User ||--o{ Comment : writes
+    Organization ||--o| Subscription : has
+    Plan ||--o{ Subscription : "chosen in"
+
+    Organization {
+        string name
+        string slug
+    }
+    Membership {
+        string role "owner / admin / member"
+    }
+    Board {
+        string name
+        bool is_public
+    }
+    Post {
+        string title
+        string status "open / planned / done ..."
+    }
+    Plan {
+        string name
+        int price_cents
+    }
+    Subscription {
+        string status
+    }
+```
+
+A vote is unique per user per post (toggling removes it); a board's slug is
+unique within its organization.
+
 ## What I learned / practised · Qué he aprendido
 
 - Structuring a Django project into apps and following the MVC/MVT separation.
