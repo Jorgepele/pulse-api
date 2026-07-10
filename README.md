@@ -121,6 +121,13 @@ Ser multi-tenant no es tener una columna `organization`: un tenant no debe poder
 leer los datos de otro. La regla vive en un solo sitio, `BoardQuerySet.visible_to`,
 y las vistas y serializers cuelgan de ella.
 
+## Why it is built this way · Por qué está hecho así
+
+The non-obvious decisions — token auth, the tenant visibility rule, simulated billing,
+SQLite in production, the Rails/Laravel ports — are written up as short
+[architecture decision records](docs/adr/), each with its context, its cost and what
+I would reconsider.
+
 ## What I learned / practised · Qué he aprendido
 
 - Structuring a Django project into apps and following the MVC/MVT separation.
