@@ -6,6 +6,20 @@ from django.utils.text import slugify
 from accounts.models import Organization
 
 
+class BoardQuerySet(models.QuerySet):
+    """Queryset holding the tenant-visibility rule, so it lives in exactly one place."""
+
+    def visible_to(self, user):
+        """Boards ``user`` may read: any public board, plus the private boards of the
+        organizations they belong to. Anonymous users only ever see public boards.
+        """
+        if not user.is_authenticated:
+            return self.filter(is_public=True)
+        return self.filter(
+            models.Q(is_public=True) | models.Q(organization__members=user)
+        ).distinct()
+
+
 class Board(models.Model):
     """A collection of feature requests, owned by an organization."""
 
@@ -17,7 +31,10 @@ class Board(models.Model):
     is_public = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    objects = BoardQuerySet.as_manager()
+
     class Meta:
+        ordering = ["name"]
         unique_together = ("organization", "slug")
 
     def save(self, *args, **kwargs):

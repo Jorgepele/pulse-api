@@ -9,15 +9,19 @@ from .serializers import BoardSerializer, CommentSerializer, PostSerializer
 
 
 class BoardViewSet(viewsets.ModelViewSet):
-    queryset = Board.objects.all()
     serializer_class = BoardSerializer
+
+    def get_queryset(self):
+        return Board.objects.visible_to(self.request.user)
 
 
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
 
     def get_queryset(self):
-        qs = Post.objects.select_related("author", "board")
+        qs = Post.objects.select_related("author", "board").filter(
+            board__in=Board.objects.visible_to(self.request.user)
+        )
         board = self.request.query_params.get("board")
         if board:
             qs = qs.filter(board_id=board)
@@ -40,7 +44,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     def get_queryset(self):
-        qs = Comment.objects.select_related("author")
+        qs = Comment.objects.select_related("author").filter(
+            post__board__in=Board.objects.visible_to(self.request.user)
+        )
         post = self.request.query_params.get("post")
         if post:
             qs = qs.filter(post_id=post)

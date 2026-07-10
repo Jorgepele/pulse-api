@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from accounts.models import Organization
+from accounts.models import Membership, Organization
 from .models import Board, Post, Vote
 
 User = get_user_model()
@@ -71,6 +71,93 @@ class PostAPITests(TestCase):
         response = self.client.get("/api/posts/?status=planned")
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["title"], "Planned one")
+
+
+class TenantScopingTests(TestCase):
+    """A private board must never leak outside the organization that owns it."""
+
+    def setUp(self):
+        self.client = APIClient()
+        # Acme owns a private board; Globex is an unrelated tenant.
+        self.member = User.objects.create_user(email="member@acme.com", password="pw12345!")
+        self.acme = Organization.objects.create(name="Acme", owner=self.member)
+        Membership.objects.create(user=self.member, organization=self.acme, role="owner")
+        self.private_board = Board.objects.create(
+            organization=self.acme, name="Internal", is_public=False
+        )
+        self.private_post = Post.objects.create(
+            board=self.private_board, author=self.member, title="Secret roadmap item"
+        )
+
+        self.outsider = User.objects.create_user(email="out@globex.com", password="pw12345!")
+        self.globex = Organization.objects.create(name="Globex", owner=self.outsider)
+        Membership.objects.create(user=self.outsider, organization=self.globex, role="owner")
+
+    def test_anonymous_cannot_see_private_board(self):
+        response = self.client.get("/api/boards/")
+        self.assertEqual(response.data["count"], 0)
+
+    def test_member_sees_own_private_board(self):
+        self.client.force_authenticate(self.member)
+        response = self.client.get("/api/boards/")
+        self.assertEqual(response.data["count"], 1)
+
+    def test_outsider_cannot_see_private_board(self):
+        self.client.force_authenticate(self.outsider)
+        response = self.client.get("/api/boards/")
+        self.assertEqual(response.data["count"], 0)
+
+    def test_outsider_cannot_see_posts_of_private_board(self):
+        self.client.force_authenticate(self.outsider)
+        response = self.client.get("/api/posts/")
+        self.assertEqual(response.data["count"], 0)
+
+    def test_outsider_cannot_retrieve_private_post(self):
+        self.client.force_authenticate(self.outsider)
+        response = self.client.get(f"/api/posts/{self.private_post.id}/")
+        self.assertEqual(response.status_code, 404)
+
+    def test_outsider_cannot_vote_on_private_post(self):
+        self.client.force_authenticate(self.outsider)
+        response = self.client.post(f"/api/posts/{self.private_post.id}/vote/")
+        self.assertEqual(response.status_code, 404)
+
+    def test_outsider_cannot_post_to_private_board(self):
+        self.client.force_authenticate(self.outsider)
+        response = self.client.post(
+            "/api/posts/", {"board": self.private_board.id, "title": "Intruder"}
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_outsider_cannot_comment_on_private_post(self):
+        self.client.force_authenticate(self.outsider)
+        response = self.client.post(
+            "/api/comments/", {"post": self.private_post.id, "body": "Peeking"}
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_cannot_create_board_in_foreign_organization(self):
+        self.client.force_authenticate(self.outsider)
+        response = self.client.post(
+            "/api/boards/", {"organization": self.acme.id, "name": "Trojan"}
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_can_create_board_in_own_organization(self):
+        self.client.force_authenticate(self.outsider)
+        response = self.client.post(
+            "/api/boards/", {"organization": self.globex.id, "name": "Ideas"}
+        )
+        self.assertEqual(response.status_code, 201)
+
+    def test_anyone_can_post_on_a_public_board(self):
+        """The product is a public roadmap: outsiders may give feedback on public boards."""
+        public_board = Board.objects.create(organization=self.acme, name="Public", is_public=True)
+        self.client.force_authenticate(self.outsider)
+        response = self.client.post(
+            "/api/posts/", {"board": public_board.id, "title": "Please add dark mode"}
+        )
+        self.assertEqual(response.status_code, 201)
 
 
 class SchemaTests(TestCase):

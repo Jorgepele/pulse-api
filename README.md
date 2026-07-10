@@ -104,6 +104,23 @@ erDiagram
 A vote is unique per user per post (toggling removes it); a board's slug is
 unique within its organization.
 
+### Tenant visibility · Visibilidad entre tenants
+
+Being multi-tenant is not just having an `organization` column — one tenant must
+not be able to read another's data. The rule lives in a single place,
+`BoardQuerySet.visible_to` (`feedback/models.py`), and everything else derives
+from it:
+
+- A **board** is visible if it is public, or if you belong to the organization
+  that owns it. Posts and comments inherit their board's visibility.
+- Anyone signed in may post and comment on a **public** board — that's the
+  product (a public roadmap, like Canny).
+- Creating a board inside an organization requires being a **member** of it.
+
+Ser multi-tenant no es tener una columna `organization`: un tenant no debe poder
+leer los datos de otro. La regla vive en un solo sitio, `BoardQuerySet.visible_to`,
+y las vistas y serializers cuelgan de ella.
+
 ## What I learned / practised · Qué he aprendido
 
 - Structuring a Django project into apps and following the MVC/MVT separation.
