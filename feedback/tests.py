@@ -1,6 +1,8 @@
 """Tests for the feedback domain and API."""
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from rest_framework.test import APIClient
 
 from accounts.models import Membership, Organization
@@ -158,6 +160,38 @@ class TenantScopingTests(TestCase):
             "/api/posts/", {"board": public_board.id, "title": "Please add dark mode"}
         )
         self.assertEqual(response.status_code, 201)
+
+
+class QueryCountTests(TestCase):
+    """Listing posts must cost the same number of queries whatever the page holds.
+
+    Guards against the N+1 problem: before the annotations, each post triggered
+    extra queries for its vote count, comment count and `has_voted`.
+    """
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(email="q@example.com", password="pw12345!")
+        self.org = Organization.objects.create(name="Acme", owner=self.user)
+        self.board = Board.objects.create(organization=self.org, name="Features")
+
+    def _queries_for(self, post_count):
+        Post.objects.all().delete()
+        for n in range(post_count):
+            post = Post.objects.create(board=self.board, author=self.user, title=f"Post {n}")
+            post.comments.create(author=self.user, body="A comment")
+            Vote.objects.create(post=post, user=self.user)
+        with CaptureQueriesContext(connection) as ctx:
+            response = self.client.get("/api/posts/")
+        self.assertEqual(response.data["count"], post_count)
+        return len(ctx.captured_queries)
+
+    def test_listing_posts_anonymously_does_not_scale_with_page_size(self):
+        self.assertEqual(self._queries_for(1), self._queries_for(5))
+
+    def test_listing_posts_authenticated_does_not_scale_with_page_size(self):
+        self.client.force_authenticate(self.user)
+        self.assertEqual(self._queries_for(1), self._queries_for(5))
 
 
 class SchemaTests(TestCase):

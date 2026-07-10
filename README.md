@@ -127,6 +127,9 @@ y las vistas y serializers cuelgan de ella.
 - Building a REST API with Django REST Framework (serializers, viewsets, routers).
 - Modelling relationships (foreign keys, many-to-many through a join model).
 - Writing tests with Django's test client.
+- Spotting and fixing an **N+1 query**: the post list used to run extra queries per
+  post for its vote count, comment count and `has_voted`. They are now `annotate`d
+  onto the queryset, and a test asserts the query count does not grow with the page.
 
 ## Run it locally · Cómo ejecutarlo
 

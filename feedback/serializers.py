@@ -21,10 +21,12 @@ class BoardSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
-    vote_count = serializers.IntegerField(read_only=True)
-    comment_count = serializers.IntegerField(source="comments.count", read_only=True)
+    # These three come from annotations added in PostViewSet.get_queryset, so the
+    # whole page is serialized without extra queries per post.
+    vote_count = serializers.IntegerField(source="votes_total", read_only=True)
+    comment_count = serializers.IntegerField(source="comments_total", read_only=True)
+    has_voted = serializers.BooleanField(read_only=True)
     author_email = serializers.EmailField(source="author.email", read_only=True)
-    has_voted = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
@@ -40,12 +42,6 @@ class PostSerializer(serializers.ModelSerializer):
         if not Board.objects.visible_to(user).filter(pk=board.pk).exists():
             raise serializers.ValidationError("This board does not exist.")
         return board
-
-    def get_has_voted(self, post) -> bool:
-        request = self.context.get("request")
-        if not request or not request.user.is_authenticated:
-            return False
-        return post.votes.filter(user=request.user).exists()
 
     def create(self, validated_data):
         request = self.context.get("request")
