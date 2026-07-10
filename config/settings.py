@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,6 +30,14 @@ SECRET_KEY = os.environ.get(
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "True") == "True"
+
+# The two settings above default to their development values, which is convenient
+# locally and dangerous anywhere else: a deploy that forgets to set SECRET_KEY would
+# silently run on the key published in this repository. Refuse to start instead.
+if not DEBUG and SECRET_KEY.startswith("django-insecure-"):
+    raise ImproperlyConfigured(
+        "SECRET_KEY must be set in the environment when DEBUG is off."
+    )
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
